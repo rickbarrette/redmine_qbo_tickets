@@ -1,0 +1,38 @@
+<%# Administration » Plugins » Redmine QBO Tickets plugin » Configure %>
+<% values = RedmineQboTickets::Settings.values %>
+<% chosen = RedmineQboTickets::Settings.custom_field_ids %>
+<fieldset class="box tabular">
+  <legend><%= l(:label_qbo_tickets_intake_fields) %></legend>
+  <p><em class="info"><%= l(:text_qbo_tickets_intake_fields) %></em></p>
+  <%= hidden_field_tag 'settings[custom_field_ids][]', '' %>
+  <% fields = IssueCustomField.sorted.to_a %>
+  <% if fields.empty? %>
+    <p class="nodata"><%= l(:label_no_data) %></p>
+  <% end %>
+  <% fields.each do |field| %>
+    <p>
+      <label class="block" style="margin-left: 0; float: none; text-align: left; width: auto;">
+        <%= check_box_tag 'settings[custom_field_ids][]', field.id, chosen.include?(field.id),
+                          id: "qbo_tickets_field_#{field.id}" %>
+        <%= field.name %>
+        <span class="qbo-ticket-field-kind">(<%= l(field.field_format == 'bool' ? :text_qbo_tickets_kind_yesno : (%w[list enumeration].include?(field.field_format) ? :text_qbo_tickets_kind_choices : :text_qbo_tickets_kind_line)) %>)</span>
+      </label>
+    </p>
+  <% end %>
+</fieldset>
+
+<fieldset class="box tabular">
+  <legend><%= l(:label_qbo_tickets_ticket) %></legend>
+  <p>
+    <label for="settings_note_lines"><%= l(:field_qbo_tickets_note_lines) %></label>
+    <%= number_field_tag 'settings[note_lines]', RedmineQboTickets::Settings.note_lines, min: 0, max: 20,
+                         id: 'settings_note_lines', style: 'width: 5em' %>
+    <em class="info"><%= l(:text_qbo_tickets_note_lines) %></em>
+  </p>
+  <p>
+    <label for="settings_uppercase"><%= l(:field_qbo_tickets_uppercase) %></label>
+    <%= hidden_field_tag 'settings[uppercase]', '0' %>
+    <%= check_box_tag 'settings[uppercase]', '1', values['uppercase'].to_s == '1', id: 'settings_uppercase' %>
+  </p>
+  <p><em class="info"><%= l(:text_qbo_tickets_printers, link: link_to(l(:label_label_printer_plural), label_printers_path)).html_safe %></em></p>
+</fieldset>

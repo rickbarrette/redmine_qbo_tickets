@@ -1,0 +1,41 @@
+# English strings go here for Rails i18n
+en:
+  # Permission (Roles and permissions)
+  permission_print_key_tickets: "Print key tickets"
+
+  label_qbo_tickets_preview: "Key ticket preview"
+  label_qbo_tickets_offline: "offline"
+  label_qbo_tickets_appointment_number: "Appointment #%{id}"
+  label_qbo_tickets_job_title: "Key ticket: %{name} (appointment #%{id})"
+  label_qbo_tickets_phone: "Phone"
+  label_qbo_tickets_work_order: "Work order"
+  label_qbo_tickets_technician: "Tech"
+  label_qbo_tickets_job: "Job"
+  label_qbo_tickets_notes: "Notes"
+  label_qbo_tickets_intake: "INTAKE"
+  label_qbo_tickets_intake_notes: "INTAKE NOTES"
+  label_qbo_tickets_intake_fields: "Intake fields"
+  label_qbo_tickets_ticket: "Key ticket"
+
+  field_qbo_tickets_copies: "Copies"
+  field_qbo_tickets_printer: "Printer"
+  field_qbo_tickets_note_lines: "Lines for notes"
+  field_qbo_tickets_uppercase: "Name in capitals"
+
+  button_qbo_tickets_print: "Print key ticket"
+  button_qbo_tickets_print_again: "Print again"
+
+  text_qbo_tickets_qr_appointment: "Scan to open the appointment"
+  text_qbo_tickets_printing: "Printing…"
+  text_qbo_tickets_waiting: "Sent, waiting for the printer…"
+  text_qbo_tickets_offline: "The printer's agent is offline. The ticket will print if it comes back within a few minutes…"
+  text_qbo_tickets_lost_contact: "Lost contact with Redmine. Check the printer before printing again."
+  text_qbo_tickets_send_failed: "The ticket couldn't be sent. Try again."
+  text_qbo_tickets_no_printers: "There's no receipt printer set up yet (Administration » Label printers, type Receipt printer)."
+  text_qbo_tickets_printer_offline: "%{name}'s print agent is offline: the ticket will wait a few minutes for it."
+  text_qbo_tickets_intake_fields: "Work order custom fields printed on the ticket, to fill in at intake. Yes/no fields get Yes and No boxes, short lists a box for each choice, and other fields a line to write on. When the appointment's work order already has a value, it's printed instead."
+  text_qbo_tickets_kind_yesno: "Yes / No boxes"
+  text_qbo_tickets_kind_choices: "a box per choice"
+  text_qbo_tickets_kind_line: "a line to write on"
+  text_qbo_tickets_note_lines: "for handwritten intake notes (0 for none)"
+  text_qbo_tickets_printers: "Tickets print on a receipt printer added in %{link}."

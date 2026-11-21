@@ -1,0 +1,35 @@
+/* Print key ticket dialog (redmine_qbo_tickets) */
+
+/* The ticket's letters (DejaVu Sans, see ../fonts/LICENSE), so it's drawn the same in every browser */
+@font-face {
+  font-family: 'QboTicket';
+  src: url('../fonts/qbo-ticket-regular.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'QboTicket';
+  src: url('../fonts/qbo-ticket-bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+#qbo-ticket-dialog .qbo-ticket-preview-wrap {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  text-align: center;
+}
+#qbo-ticket-dialog canvas.qbo-ticket-preview {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  image-rendering: pixelated;
+}
+#qbo-ticket-dialog .qbo-ticket-warning { color: #b35900; }
+#qbo-ticket-dialog .qbo-ticket-status { font-size: 1.1em; }
+#qbo-ticket-dialog .qbo-ticket-status[data-state="printed"] .qbo-ticket-status-text { color: #2e7d32; }
+#qbo-ticket-dialog .qbo-ticket-status[data-state="failed"] .qbo-ticket-status-text { color: #c62828; }

@@ -1,0 +1,50 @@
+<%# The Print key ticket dialog: the ticket as it will print (drawn by assets/javascripts/qbo_tickets.js), copies
+    and printer %>
+<div id="qbo-ticket-dialog"
+     data-create-url="<%= key_tickets_path %>"
+     data-appointment-id="<%= @ticket.appointment.id %>"
+     data-text-printing="<%= l(:text_qbo_tickets_printing) %>"
+     data-text-waiting="<%= l(:text_qbo_tickets_waiting) %>"
+     data-text-offline="<%= l(:text_qbo_tickets_offline) %>"
+     data-text-lost="<%= l(:text_qbo_tickets_lost_contact) %>"
+     data-text-failed="<%= l(:text_qbo_tickets_send_failed) %>">
+  <% if @printers.empty? %>
+    <p class="nodata"><%= l(:text_qbo_tickets_no_printers) %></p>
+  <% else %>
+    <form id="qbo-ticket-form">
+      <div class="qbo-ticket-preview-wrap">
+        <canvas class="qbo-ticket-preview" width="576" height="1" aria-label="<%= l(:label_qbo_tickets_preview) %>"></canvas>
+      </div>
+      <div class="tabular">
+        <p>
+          <label for="qbo_ticket_copies"><%= l(:field_qbo_tickets_copies) %></label>
+          <%= number_field_tag :copies, 1, id: 'qbo_ticket_copies', min: 1, max: KeyTicketsController::MAX_COPIES %>
+        </p>
+        <% if @printers.size > 1 %>
+          <p>
+            <label for="qbo_ticket_printer"><%= l(:field_qbo_tickets_printer) %></label>
+            <%= select_tag :printer_id,
+                           options_for_select(@printers.map { |p| ["#{p.name}#{" (#{l(:label_qbo_tickets_offline)})" unless p.online?}", p.id] },
+                                              @printers.find(&:online?)&.id),
+                           id: 'qbo_ticket_printer' %>
+          </p>
+        <% elsif !@printers.first.online? %>
+          <p class="qbo-ticket-warning"><%= l(:text_qbo_tickets_printer_offline, name: @printers.first.name) %></p>
+        <% end %>
+      </div>
+      <div class="qbo-ticket-errors" hidden></div>
+      <p class="buttons">
+        <%= button_tag l(:button_qbo_tickets_print), type: 'submit', class: 'qbo-ticket-submit' %>
+        <%= link_to_function l(:button_cancel), 'hideModal(this);' %>
+      </p>
+    </form>
+
+    <div class="qbo-ticket-status" hidden>
+      <p class="qbo-ticket-status-text"></p>
+      <p class="buttons">
+        <%= button_tag l(:button_qbo_tickets_print_again), type: 'button', onclick: 'QboTickets.again();', class: 'qbo-ticket-again' %>
+        <%= button_tag l(:button_close), type: 'button', onclick: 'hideModal(this);' %>
+      </p>
+    </div>
+  <% end %>
+</div>

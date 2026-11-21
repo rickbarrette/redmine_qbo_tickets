@@ -1,0 +1,3 @@
+$('#ajax-modal').html('<%= escape_javascript(render partial: 'key_tickets/dialog') %>');
+showModal('ajax-modal', '420px', '<%= escape_javascript(l(:button_qbo_tickets_print)) %>');
+QboTickets.initDialog(<%= raw @ticket.as_json.to_json %>);
