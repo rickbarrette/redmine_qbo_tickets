@@ -13,6 +13,7 @@ en:
   label_qbo_tickets_job: "Job"
   label_qbo_tickets_notes: "Notes"
   label_qbo_tickets_intake: "INTAKE"
+  label_qbo_tickets_appointment_notes: "NOTES"
   label_qbo_tickets_intake_notes: "INTAKE NOTES"
   label_qbo_tickets_intake_fields: "Intake fields"
   label_qbo_tickets_ticket: "Key ticket"

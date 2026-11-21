@@ -5,7 +5,8 @@ Prints a **key ticket** for an appointment ([redmine_qbo_calendar](https://githu
 <img src="Screenshots/ticket.png" alt="A key ticket (made-up customer)" width="288" align="right">
 
 * **Who and when:** the customer's last name in big letters and the appointment's day and time, readable above the folder's edge.
-* **The appointment:** customer, phone, estimate (E1234), work order (W1234, once there is one), technician, the job and its notes. Other plugins add lines, e.g. [redmine_qbo_vehicles](https://github.com/rickbarrette/redmine_qbo_vehicles) adds the vehicle.
+* **The appointment:** customer, phone, estimate (E1234), work order (W1234, once there is one), technician and the job. Other plugins add lines, e.g. [redmine_qbo_vehicles](https://github.com/rickbarrette/redmine_qbo_vehicles) adds the vehicle.
+* **Notes:** the appointment's description under **NOTES**, formatted as Redmine formats it (Markdown or Textile): bold, italics, lists, task boxes, quotes, alerts like `> [!IMPORTANT]`, headings and code. Issue references like `##1234` print as W1234.
 * **Intake:** the work order custom fields you choose (e.g. Mileage, Check Engine Light, TPMS Light, ABS Light, Airbag Light, Save Parts), drawn by their format:
   * yes/no fields: **Yes** and **No** boxes, so a box left empty is never mistaken for "no";
   * lists of up to 6 choices: a box for each;

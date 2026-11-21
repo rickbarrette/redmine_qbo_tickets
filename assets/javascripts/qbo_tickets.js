@@ -8,7 +8,7 @@
  * printer's queue, and follows the print job until it's printed.
  *
  * The ticket, top to bottom: the customer's name and when they're due (big, to read above the key folder's
- * edge), the appointment's details, the job and its notes, the work order's custom fields to fill in at intake
+ * edge), the appointment's details, the job, the appointment's notes, the work order's custom fields to fill in at intake
  * (Yes/No boxes, choices, or lines to write on), lines for intake notes, and a QR code.
  */
 var QboTickets = (function($) {
@@ -56,6 +56,123 @@ var QboTickets = (function($) {
       ctx.font = font(weight, size);
     }
     return size;
+  }
+
+  function runFont(run, size, bold) {
+    return (run.i ? 'italic ' : '') + font(run.b || bold ? 700 : 400, size);
+  }
+
+  // Styled runs ({ t, b, i, s, c } text, { br } line breaks, { box } checkboxes) laid out in lines no wider than
+  // width: [{ tokens: [{ text | box, font, run, w }], width }]
+  function layoutRuns(ctx, runs, width, size, bold) {
+    var lines = [{ tokens: [], width: 0 }];
+    function line() { return lines[lines.length - 1]; }
+    function newLine() {
+      var last = line();
+      while (last.tokens.length && /^\s+$/.test(last.tokens[last.tokens.length - 1].text || '')) {
+        last.width -= last.tokens.pop().w;
+      }
+      lines.push({ tokens: [], width: 0 });
+    }
+    function push(token) {
+      var current = line();
+      var space = /^\s+$/.test(token.text || '');
+      if (space && !current.tokens.length) { return; }
+      if (!space && current.tokens.length && current.width + token.w > width) {
+        newLine();
+        current = line();
+      }
+      current.tokens.push(token);
+      current.width += token.w;
+    }
+    runs.forEach(function(run) {
+      if (run.br) { newLine(); return; }
+      if (run.box !== undefined) { push({ box: true, checked: run.box, w: size + 4, run: run }); return; }
+      var runFontText = runFont(run, size, bold);
+      ctx.font = runFontText;
+      String(run.t || '').split(/(\s+)/).forEach(function(piece) {
+        if (!piece) { return; }
+        if (/^\s+$/.test(piece)) { piece = ' '; }
+        var w = ctx.measureText(piece).width;
+        // A word longer than the line is broken
+        while (w > width && piece.length > 1) {
+          var cut = piece.length - 1;
+          while (cut > 1 && ctx.measureText(piece.slice(0, cut)).width > width) { cut -= 1; }
+          push({ text: piece.slice(0, cut), font: runFontText, run: run, w: ctx.measureText(piece.slice(0, cut)).width });
+          piece = piece.slice(cut);
+          w = ctx.measureText(piece).width;
+        }
+        push({ text: piece, font: runFontText, run: run, w: w });
+      });
+    });
+    return lines;
+  }
+
+  // Draws laid-out lines from top; returns the y below them
+  function drawLines(ctx, lines, left, top, size, lineHeight, drawBox) {
+    var y = top;
+    lines.forEach(function(line) {
+      var x = left, baseline = y + Math.round(size * 0.8);
+      line.tokens.forEach(function(token) {
+        if (token.box) {
+          drawBox(x, y + 2, size - 2, token.checked);
+        } else {
+          ctx.font = token.font;
+          ctx.fillText(token.text, x, baseline);
+          if (token.run.s) { ctx.fillRect(x, baseline - Math.round(size * 0.3), token.w, 2); }
+          if (token.run.c && token.text !== ' ') { ctx.fillRect(x, baseline + 4, token.w, 1); }
+        }
+        x += token.w;
+      });
+      y += lineHeight;
+    });
+    return y;
+  }
+
+  // Formatted text's blocks (paragraphs, headings, list items, alerts, code, rules), quotes and alerts with a
+  // bar down their left; returns the y below them
+  function drawBlocks(ctx, blocks, left, top, width, drawBox) {
+    var y = top, QUOTE = 22;
+    blocks.forEach(function(block, index) {
+      var indent = (block.quote || 0) * QUOTE, x = left + indent, w = width - indent, start = y;
+      if (block.type === 'hr') {
+        ctx.fillRect(x, y + 8, w, 2);
+        y += 20;
+      } else if (block.type === 'alert') {
+        ctx.fillRect(x, y, w, 34);
+        ctx.fillStyle = '#fff';
+        ctx.font = font(700, 22);
+        ctx.fillText('! ' + block.runs.map(function(run) { return run.t; }).join(''), x + 10, y + 25);
+        ctx.fillStyle = '#000';
+        y += 34;
+      } else if (block.type === 'h') {
+        var size = block.level === 1 ? 32 : (block.level === 2 ? 29 : 26);
+        y = drawLines(ctx, layoutRuns(ctx, block.runs, w, size, true), x, y, size, Math.round(size * 1.2), drawBox);
+      } else if (block.type === 'li') {
+        var markerX = x + ((block.level || 1) - 1) * 26;
+        ctx.font = font(700, 24);
+        var markerWidth = block.marker ? Math.max(24, ctx.measureText(block.marker).width + 10) : 0;
+        if (block.marker) { ctx.fillText(block.marker, markerX, y + 19); }
+        y = drawLines(ctx, layoutRuns(ctx, block.runs, w - (markerX - x) - markerWidth, 24, false),
+                      markerX + markerWidth, y, 24, 29, drawBox);
+      } else if (block.type === 'code') {
+        var codeLines = layoutRuns(ctx, block.runs.map(function(run) { return run.br ? run : { t: run.t }; }), w - 16, 22, false);
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, y + 1, w - 2, codeLines.length * 27 + 10);
+        y = drawLines(ctx, codeLines, x + 8, y + 6, 22, 27, drawBox) + 6;
+      } else {
+        y = drawLines(ctx, layoutRuns(ctx, block.runs, w, 24, false), x, y, 24, 29, drawBox);
+      }
+      // Quote bars beside the block, one per level
+      for (var level = 0; level < (block.quote || 0); level += 1) {
+        ctx.fillRect(left + level * QUOTE + 4, start - 3, 4, y - start + 6);
+      }
+      var next = blocks[index + 1];
+      var together = next && block.type === 'li' && next.type === 'li' ||
+                     next && block.type === 'alert';
+      y += together ? 2 : 10;
+    });
+    return y - 10;
   }
 
   // Draws the ticket on a tall canvas; returns the height used
@@ -121,16 +238,16 @@ var QboTickets = (function($) {
       });
     });
 
-    if (data.job || data.notes) {
+    if (data.job) {
       rule(1, 6);
-      if (data.job) {
-        ctx.font = font(700, 26);
-        wrap(ctx, data.job, width).forEach(function(line) { text(line, 700, 26); y += 32; });
-      }
-      if (data.notes) {
-        ctx.font = font(400, 22);
-        wrap(ctx, data.notes, width).forEach(function(line) { text(line, 400, 22); y += 27; });
-      }
+      ctx.font = font(700, 26);
+      wrap(ctx, data.job, width).forEach(function(line) { text(line, 700, 26); y += 32; });
+    }
+
+    // The appointment's notes, formatted as Redmine formats them (RedmineQboTickets::RichText's blocks)
+    if (data.notes && data.notes.length) {
+      section(data.labels.appointment_notes);
+      y = drawBlocks(ctx, data.notes, x, y, width, box);
     }
 
     // The work order's custom fields, to fill in at intake

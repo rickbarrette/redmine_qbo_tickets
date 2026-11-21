@@ -24,7 +24,7 @@ module RedmineQboTickets
   class Ticket
     # List fields with more choices than this get a line to write on instead
     MAX_CHOICES = 6
-    NOTES_LENGTH = 400
+    NOTES_LENGTH = 1000
 
     attr_reader :appointment
 
@@ -83,13 +83,21 @@ module RedmineQboTickets
       lines.map { |label, value| [label.to_s, value.to_s.squish] }.reject { |_, value| value.blank? }
     end
 
-    # The job (the appointment's subject) and its notes
+    # The job (the appointment's subject)
     def job
       appointment.subject.to_s.squish
     end
 
+    # The appointment's notes (its description) as written, with issue references (##1234) as work order
+    # numbers (W1234)
+    def notes_text
+      text = appointment.description.to_s.gsub(/\r\n?/, "\n").strip
+      text.gsub(/(?<![\w#])##(\d+)\b/, 'W\\1').truncate(NOTES_LENGTH)
+    end
+
+    # The notes formatted as Redmine formats them (Markdown or Textile), as blocks the ticket draws (RichText)
     def notes
-      appointment.description.to_s.squish.truncate(NOTES_LENGTH)
+      RichText.blocks(notes_text)
     end
 
     # The chosen custom fields, each as { name:, kind:, value:, choices: }:
@@ -122,6 +130,7 @@ module RedmineQboTickets
         labels: {
           yes: I18n.t(:general_text_Yes), no: I18n.t(:general_text_No), notes: I18n.t(:label_qbo_tickets_notes),
           job: I18n.t(:label_qbo_tickets_job), intake: I18n.t(:label_qbo_tickets_intake),
+          appointment_notes: I18n.t(:label_qbo_tickets_appointment_notes),
           intake_notes: I18n.t(:label_qbo_tickets_intake_notes)
         }
       }

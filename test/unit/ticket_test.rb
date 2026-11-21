@@ -47,7 +47,26 @@ class TicketTest < ActiveSupport::TestCase
     assert_equal 'John Smith', details['Tech']
     assert_nil details['Work order']
     assert_equal 'Lift kit install', ticket.job
-    assert_equal 'Customer hears a clunk over bumps', ticket.notes
+    assert_equal 'Customer hears a clunk over bumps', ticket.notes_text
+  end
+
+  def test_notes_text
+    @appointment.update_columns(description: "Replaced everything.\r\n\r\nsee ##16262, not #3")
+    assert_equal "Replaced everything.\n\nsee W16262, not #3", ticket.notes_text
+    @appointment.update_columns(description: 'x' * 1200)
+    assert_equal 1000, ticket.notes_text.length
+    @appointment.update_columns(description: '')
+    assert_equal [], ticket.notes
+  end
+
+  def test_notes_are_formatted
+    Setting.stubs(:text_formatting).returns('common_mark')
+    @appointment.update_columns(description: "Customer reported **death** wobble\n\n> [!important]\n> check steering")
+    blocks = ticket.notes
+    assert_equal [{ t: 'Customer reported ' }, { b: true, t: 'death' }, { t: ' wobble' }], blocks[0][:runs]
+    assert_equal 'alert', blocks[1][:type]
+    assert_equal [{ t: 'IMPORTANT' }], blocks[1][:runs]
+    assert_equal({ type: 'p', quote: 1, runs: [{ t: 'check steering' }] }, blocks[2])
   end
 
   def test_the_work_order_once_there_is_one
