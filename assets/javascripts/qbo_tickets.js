@@ -9,7 +9,7 @@
  *
  * The ticket, top to bottom: the customer's name and when they're due (big, to read above the key folder's
  * edge), the appointment's details, the job, the appointment's notes, the work order's custom fields to fill in at intake
- * (Yes/No boxes, choices, or lines to write on), lines for intake notes, and a QR code.
+ * (Yes/No boxes, choices, or lines to write on), lines for intake notes, a QR code, and when it was printed.
  */
 var QboTickets = (function($) {
   'use strict';
@@ -56,6 +56,15 @@ var QboTickets = (function($) {
       ctx.font = font(weight, size);
     }
     return size;
+  }
+
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // e.g. "Sat 11/21/2026 · 4:35 PM", as the appointment's time is written at the top
+  function printedAt(date) {
+    var hours = date.getHours(), minutes = date.getMinutes();
+    return DAYS[date.getDay()] + ' ' + (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear() +
+      ' · ' + (hours % 12 || 12) + ':' + (minutes < 10 ? '0' : '') + minutes + ' ' + (hours < 12 ? 'AM' : 'PM');
   }
 
   function runFont(run, size, bold) {
@@ -337,6 +346,15 @@ var QboTickets = (function($) {
       y = top + size + 16;
     }
 
+    // When it was printed, small at the bottom
+    if (data.labels.printed) {
+      var stamp = data.labels.printed.replace('%{time}', printedAt(data.printed_at || new Date()));
+      y += 8;
+      ctx.font = font(400, 20);
+      ctx.fillText(stamp, x + (width - ctx.measureText(stamp).width) / 2, y + 16);
+      y += 22;
+    }
+
     return Math.min(MAX_HEIGHT, Math.ceil(y + MARGIN));
   }
 
@@ -404,6 +422,7 @@ var QboTickets = (function($) {
     var $dialog = dialog();
     var $submit = $dialog.find('.qbo-ticket-submit').prop('disabled', true);
     showErrors([]);
+    redraw(); // the printing time is now
     $.ajax({
       url: $dialog.data('create-url'),
       method: 'POST',

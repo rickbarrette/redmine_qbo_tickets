@@ -131,7 +131,9 @@ module RedmineQboTickets
           yes: I18n.t(:general_text_Yes), no: I18n.t(:general_text_No), notes: I18n.t(:label_qbo_tickets_notes),
           job: I18n.t(:label_qbo_tickets_job), intake: I18n.t(:label_qbo_tickets_intake),
           appointment_notes: I18n.t(:label_qbo_tickets_appointment_notes),
-          intake_notes: I18n.t(:label_qbo_tickets_intake_notes)
+          intake_notes: I18n.t(:label_qbo_tickets_intake_notes),
+          # %{time} is filled in by the browser when the ticket is printed
+          printed: I18n.t(:label_qbo_tickets_printed, time: '%{time}')
         }
       }
     end

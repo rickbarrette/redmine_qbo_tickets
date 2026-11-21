@@ -15,6 +15,7 @@ Prints a **key ticket** for an appointment ([redmine_qbo_calendar](https://githu
   When the appointment's work order already has a value, it's printed (ticked) instead.
 * **Intake notes:** lines for handwritten notes (5 by default).
 * **QR code:** opens the appointment; with redmine_qbo_vehicles it opens the vehicle, or, when the appointment has none yet, adds one for the customer that becomes the appointment's vehicle.
+* **When it was printed**, small at the bottom.
 
 **Print key ticket** is in the appointment page's top-right actions. The dialog shows the ticket exactly as it will print (black and white, 72mm wide), then follows it until it's printed, like the Print label dialog.
 

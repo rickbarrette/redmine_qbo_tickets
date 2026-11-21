@@ -142,6 +142,7 @@ class TicketTest < ActiveSupport::TestCase
     assert_equal %i[name when number details job notes fields note_lines qr labels].sort, json.keys.sort
     assert_equal 5, json[:note_lines]
     assert_equal 'Yes', json[:labels][:yes]
+    assert_equal 'Printed %{time}', json[:labels][:printed]
     assert_match 'SMITH', ticket.title
   end
 end
