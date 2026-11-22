@@ -36,3 +36,81 @@
   </p>
   <p><em class="info"><%= l(:text_qbo_tickets_printers, link: link_to(l(:label_label_printer_plural), label_printers_path)).html_safe %></em></p>
 </fieldset>
+
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'qbo_tickets', plugin: 'redmine_qbo_tickets' %>
+  <%= javascript_include_tag 'qbo_tickets_settings', plugin: 'redmine_qbo_tickets' %>
+<% end %>
+<fieldset class="box tabular">
+  <legend><%= l(:label_qbo_tickets_reminder) %></legend>
+  <p><em class="info"><%= l(:text_qbo_tickets_reminder) %></em></p>
+  <div id="qbo-tickets-logo"
+       data-text-size="<%= l(:text_qbo_tickets_logo_size) %>"
+       data-text-too-big="<%= l(:text_qbo_tickets_logo_too_big) %>"
+       data-text-unreadable="<%= l(:text_qbo_tickets_logo_unreadable) %>"
+       data-text-unsupported="<%= l(:text_qbo_tickets_logo_unsupported) %>">
+    <p>
+      <label for="qbo_tickets_logo_file"><%= l(:field_qbo_tickets_logo) %></label>
+      <%= hidden_field_tag 'settings[logo]', RedmineQboTickets::Settings.logo.to_s, class: 'qbo-tickets-logo-value',
+                           id: 'settings_logo' %>
+      <input type="file" accept="image/*" id="qbo_tickets_logo_file" class="qbo-tickets-logo-file">
+      <a href="#" class="qbo-tickets-logo-remove icon icon-del" hidden><%= l(:button_qbo_tickets_logo_remove) %></a>
+      <em class="info"><%= l(:text_qbo_tickets_logo) %></em>
+    </p>
+    <div class="qbo-tickets-logo-controls" hidden>
+      <p>
+        <label for="qbo_tickets_logo_width"><%= l(:field_qbo_tickets_logo_width) %></label>
+        <input type="range" id="qbo_tickets_logo_width" class="qbo-tickets-logo-width" min="20" max="100" step="5" value="70">
+      </p>
+      <p>
+        <label for="qbo_tickets_logo_level"><%= l(:field_qbo_tickets_logo_level) %></label>
+        <input type="range" id="qbo_tickets_logo_level" class="qbo-tickets-logo-level" min="40" max="230" step="5" value="150">
+        <em class="info"><%= l(:text_qbo_tickets_logo_level) %></em>
+      </p>
+      <p>
+        <label for="qbo_tickets_logo_dither"><%= l(:field_qbo_tickets_logo_dither) %></label>
+        <input type="checkbox" id="qbo_tickets_logo_dither" class="qbo-tickets-logo-dither">
+        <em class="info"><%= l(:text_qbo_tickets_logo_dither) %></em>
+      </p>
+    </div>
+    <p class="qbo-tickets-logo-error" hidden></p>
+    <div class="qbo-tickets-logo-paper" hidden>
+      <img class="qbo-tickets-logo-preview" alt="<%= l(:label_qbo_tickets_logo_preview) %>" hidden>
+    </div>
+    <p class="qbo-tickets-logo-info"></p>
+  </div>
+  <p>
+    <label for="settings_shop_name"><%= l(:field_qbo_tickets_shop_name) %></label>
+    <%= text_field_tag 'settings[shop_name]', values['shop_name'], id: 'settings_shop_name', size: 40 %>
+  </p>
+  <p>
+    <label for="settings_shop_address"><%= l(:field_qbo_tickets_shop_address) %></label>
+    <%= text_area_tag 'settings[shop_address]', values['shop_address'], id: 'settings_shop_address', rows: 3, cols: 40 %>
+  </p>
+  <p>
+    <label for="settings_shop_phone"><%= l(:field_qbo_tickets_shop_phone) %></label>
+    <%= text_field_tag 'settings[shop_phone]', values['shop_phone'], id: 'settings_shop_phone', size: 20 %>
+  </p>
+  <p>
+    <label for="settings_shop_website"><%= l(:field_qbo_tickets_shop_website) %></label>
+    <%= text_field_tag 'settings[shop_website]', values['shop_website'], id: 'settings_shop_website', size: 40 %>
+  </p>
+  <p>
+    <label for="settings_reminder_message"><%= l(:field_qbo_tickets_reminder_message) %></label>
+    <%= text_area_tag 'settings[reminder_message]', values['reminder_message'], id: 'settings_reminder_message', rows: 3, cols: 40 %>
+    <em class="info"><%= l(:text_qbo_tickets_reminder_message) %></em>
+  </p>
+  <p>
+    <label for="settings_reminder_qr"><%= l(:field_qbo_tickets_reminder_qr) %></label>
+    <%= select_tag 'settings[reminder_qr]',
+                   options_for_select(RedmineQboTickets::Settings::REMINDER_QR.map { |key| [l("label_qbo_tickets_reminder_qr_#{key}"), key] },
+                                      RedmineQboTickets::Settings.reminder_qr),
+                   id: 'settings_reminder_qr' %>
+  </p>
+  <p>
+    <label for="settings_reminder_notes"><%= l(:field_qbo_tickets_reminder_notes) %></label>
+    <%= hidden_field_tag 'settings[reminder_notes]', '0', id: nil %>
+    <%= check_box_tag 'settings[reminder_notes]', '1', RedmineQboTickets::Settings.reminder_notes?, id: 'settings_reminder_notes' %>
+    <em class="info"><%= l(:text_qbo_tickets_reminder_notes) %></em>
+  </p>
+</fieldset>

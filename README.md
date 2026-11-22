@@ -1,5 +1,9 @@
 # Redmine QBO Tickets
 
+Prints tickets for appointments ([redmine_qbo_calendar](https://github.com/rickbarrette/redmine_qbo_calendar)) on a Star receipt printer: **key tickets** for the shop and **appointment reminders** for customers.
+
+## Key tickets
+
 Prints a **key ticket** for an appointment ([redmine_qbo_calendar](https://github.com/rickbarrette/redmine_qbo_calendar)) on a Star receipt printer. The ticket goes in the key folder when the customer drops off, before the vehicle's intake. It replaces the sticky notes, and it names the keys while they wait.
 
 <img src="Screenshots/ticket.png" alt="A key ticket (made-up customer)" width="288" align="right">
@@ -18,6 +22,24 @@ Prints a **key ticket** for an appointment ([redmine_qbo_calendar](https://githu
 * **When it was printed**, small at the bottom.
 
 **Print key ticket** is in the appointment page's top-right actions. The dialog shows the ticket exactly as it will print (black and white, 72mm wide), then follows it until it's printed, like the Print label dialog.
+
+<br clear="right">
+
+## Appointment reminders
+
+<img src="Screenshots/reminder.png" alt="An appointment reminder (made-up shop and customer)" width="288" align="right">
+
+A reminder for the customer to take home when they book:
+
+* **Your shop:** your logo, name, address, phone and website, from the plugin settings.
+* **When:** the day, date and time in big letters.
+* **The appointment:** the customer, other plugins' lines (e.g. the vehicle), the job, the estimate (E1234), and how long to plan on when it takes more than a day. Nothing for the shop only: no phone, work order or technician. The appointment's notes are printed only when the settings say so.
+* **Your message**, e.g. how to reschedule.
+* **QR code:** adds the appointment to the customer's phone calendar (their camera offers it), or opens your website, or none.
+
+**Print reminder** is next to Print key ticket, in the same dialog.
+
+**The logo:** pick a picture of it (PNG, JPEG…) on the settings page. It's trimmed of its blank edges, sized, and turned black and white right there, with sliders for its width and darkness, and dithering for photos or shaded logos. The preview is what prints. It's kept as a small black and white PNG in the plugin's settings.
 
 <br clear="right">
 
@@ -43,17 +65,17 @@ git clone https://github.com/rickbarrette/redmine_qbo_tickets.git
 Restart Redmine, then:
 
 1. **Administration » Label printers » New label printer**: type *Receipt printer*. Run the print agent with the Compose file shown (set `PRINTER` to the printer's address).
-2. **Administration » Plugins » Redmine QBO Tickets plugin » Configure**: tick the work order custom fields to print, and how many lines for notes.
-3. **Administration » Roles and permissions**: give the roles that check customers in **Print key tickets** (they also need **View customer appointments**).
+2. **Administration » Plugins » Redmine QBO Tickets plugin » Configure**: tick the work order custom fields to print, and how many lines for notes. For reminders: your logo, shop details, message and QR code.
+3. **Administration » Roles and permissions**: give the roles that check customers in **Print key tickets**, and those that book appointments **Print appointment reminders** (they also need **View customer appointments**).
 
 ## Hooks
 
-Other plugins add to the ticket with these hooks (context: `appointment`, and `base_url`, Redmine's address for links):
+Other plugins add to the tickets with these hooks (context: `appointment`, and `base_url`, Redmine's address for links):
 
 Hook | Return
 ---|---
-`:qbo_tickets_details` | An array of `[label, value]` lines, shown under the customer, e.g. `[['Vehicle', '2019 Jeep Wrangler']]`
-`:qbo_tickets_qr` | `{ url:, caption: }` for the QR code (the first listener's). Without one, it opens the appointment
+`:qbo_tickets_details` | An array of `[label, value]` lines, shown under the customer, e.g. `[['Vehicle', '2019 Jeep Wrangler']]`. Called for both tickets; the context's `kind` is `'key'` or `'reminder'`, so lines only the shop should see can be left off the customer's reminder
+`:qbo_tickets_qr` | `{ url:, caption: }` for the key ticket's QR code (the first listener's). Without one, it opens the appointment. Not used on reminders
 
 ## License
 

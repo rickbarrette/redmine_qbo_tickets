@@ -19,9 +19,13 @@ module RedmineQboTickets
     end
   end
 
-  # Whether the current user may print key tickets and there's a receipt printer to print on
-  def self.printing_available?
-    User.current.allowed_to?(:print_key_tickets, nil, global: true) && LabelPrinter.active.receipts.exists?
+  PERMISSIONS = %i[print_key_tickets print_reminder_tickets].freeze
+
+  # Whether the current user may print key tickets (or reminders, or either, without a permission) and
+  # there's a receipt printer to print on
+  def self.printing_available?(permission = nil)
+    allowed = Array(permission || PERMISSIONS).any? { |p| User.current.allowed_to?(p, nil, global: true) }
+    allowed && LabelPrinter.active.receipts.exists?
   end
 
   # The listeners' answers to a hook, flattened, without blanks

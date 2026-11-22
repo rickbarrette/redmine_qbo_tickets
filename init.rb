@@ -3,7 +3,7 @@ Redmine::Plugin.register :redmine_qbo_tickets do
   # About
   name 'Redmine QBO Tickets plugin'
   author 'Rick Barrette'
-  description 'Prints key tickets for appointments on a receipt printer: the customer, the appointment, the work order\'s custom fields to fill in at intake, room for notes, and a QR code'
+  description 'Prints tickets for appointments on a receipt printer: key tickets (the customer, the appointment, the work order\'s custom fields to fill in at intake, room for notes, and a QR code) and appointment reminders for customers (the shop\'s logo and details, when they\'re due, and a QR code for their calendar)'
   version '2026.11.1'
   url 'https://github.com/rickbarrette/redmine_qbo_tickets'
   author_url 'https://barrettefabrication.com'
@@ -27,6 +27,8 @@ Redmine::Plugin.register :redmine_qbo_tickets do
 
   # The Print key ticket dialog, sending the ticket and following its print job
   permission :print_key_tickets, { key_tickets: [:new, :create, :show] }, global: true
+  # The Print reminder dialog: an appointment reminder for the customer
+  permission :print_reminder_tickets, { reminder_tickets: [:new, :create, :show] }, global: true
 end
 
 RedmineQboTickets.setup

@@ -19,6 +19,7 @@ module RedmineQboTickets
   #
   # Other plugins add to it with hooks (context: appointment, base_url, e.g. https://redmine.example.com):
   #   :qbo_tickets_details  an array of [label, value] lines under the customer, e.g. [['Vehicle', '2019 Jeep']]
+  #                         (the context's kind is 'key'; Reminder calls it with 'reminder')
   #   :qbo_tickets_qr       { url:, caption: } for the QR code (the first listener's); without one, the QR code
   #                         opens the appointment
   class Ticket
@@ -157,7 +158,8 @@ module RedmineQboTickets
     end
 
     def hook_details
-      RedmineQboTickets.hook_list(:qbo_tickets_details, appointment: appointment, base_url: self.class.base_url)
+      RedmineQboTickets.hook_list(:qbo_tickets_details, appointment: appointment, base_url: self.class.base_url,
+                                                        kind: 'key')
                        .select { |line| line.is_a?(Array) && line.size == 2 }
     end
 

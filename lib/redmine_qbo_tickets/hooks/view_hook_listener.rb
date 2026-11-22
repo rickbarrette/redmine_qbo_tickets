@@ -10,7 +10,8 @@
 
 module RedmineQboTickets
   module Hooks
-    # "Print key ticket" in an appointment's top-right actions, and the dialog's script and styles
+    # "Print key ticket" and "Print reminder" in an appointment's top-right actions, and the dialog's script and
+    # styles
     class ViewHookListener < Redmine::Hook::ViewListener
       def view_layouts_base_html_head(context = {})
         controller = context[:controller]
@@ -24,9 +25,12 @@ module RedmineQboTickets
       # redmine_qbo_calendar's :view_customer_appointments_show_contextual
       def view_customer_appointments_show_contextual(context = {})
         appointment = context[:appointment]
-        return '' if appointment.nil? || appointment.call_out? || !RedmineQboTickets.printing_available?
+        return '' if appointment.nil? || appointment.call_out?
 
-        context[:hook_caller].render(partial: 'ticket_hooks/print_link', locals: { appointment: appointment })
+        { print_key_tickets: 'ticket_hooks/print_link', print_reminder_tickets: 'ticket_hooks/print_reminder_link' }
+          .select { |permission, _| RedmineQboTickets.printing_available?(permission) }
+          .map { |_, partial| context[:hook_caller].render(partial: partial, locals: { appointment: appointment }) }
+          .join.html_safe
       end
     end
   end

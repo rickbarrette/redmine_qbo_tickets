@@ -33,3 +33,22 @@
 #qbo-ticket-dialog .qbo-ticket-status { font-size: 1.1em; }
 #qbo-ticket-dialog .qbo-ticket-status[data-state="printed"] .qbo-ticket-status-text { color: #2e7d32; }
 #qbo-ticket-dialog .qbo-ticket-status[data-state="failed"] .qbo-ticket-status-text { color: #c62828; }
+
+/* Plugin settings: the reminder's logo, on a half-size strip of paper (576 dots as 288px) */
+#qbo-tickets-logo [hidden] { display: none !important; }
+#qbo-tickets-logo .qbo-tickets-logo-paper {
+  width: 288px;
+  margin: 4px 0 4px 180px;
+  padding: 7px;
+  box-sizing: border-box;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+#qbo-tickets-logo img.qbo-tickets-logo-preview { image-rendering: pixelated; max-width: 100%; }
+#qbo-tickets-logo .qbo-tickets-logo-info { color: #777; }
+#qbo-tickets-logo .qbo-tickets-logo-error { color: #c62828; }
+#qbo-tickets-logo .qbo-tickets-logo-remove { margin-left: 8px; }
+@media (max-width: 899px) {
+  #qbo-tickets-logo .qbo-tickets-logo-paper { margin-left: 0; }
+}

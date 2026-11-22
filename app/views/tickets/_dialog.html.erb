@@ -1,7 +1,7 @@
-<%# The Print key ticket dialog: the ticket as it will print (drawn by assets/javascripts/qbo_tickets.js), copies
-    and printer %>
+<%# The print dialog (key tickets and appointment reminders): the ticket as it will print (drawn by
+    assets/javascripts/qbo_tickets.js), copies and printer. Locals: create_url, print_label, preview_label %>
 <div id="qbo-ticket-dialog"
-     data-create-url="<%= key_tickets_path %>"
+     data-create-url="<%= create_url %>"
      data-appointment-id="<%= @ticket.appointment.id %>"
      data-text-printing="<%= l(:text_qbo_tickets_printing) %>"
      data-text-waiting="<%= l(:text_qbo_tickets_waiting) %>"
@@ -13,12 +13,12 @@
   <% else %>
     <form id="qbo-ticket-form">
       <div class="qbo-ticket-preview-wrap">
-        <canvas class="qbo-ticket-preview" width="576" height="1" aria-label="<%= l(:label_qbo_tickets_preview) %>"></canvas>
+        <canvas class="qbo-ticket-preview" width="576" height="1" aria-label="<%= preview_label %>"></canvas>
       </div>
       <div class="tabular">
         <p>
           <label for="qbo_ticket_copies"><%= l(:field_qbo_tickets_copies) %></label>
-          <%= number_field_tag :copies, 1, id: 'qbo_ticket_copies', min: 1, max: KeyTicketsController::MAX_COPIES %>
+          <%= number_field_tag :copies, 1, id: 'qbo_ticket_copies', min: 1, max: RedmineQboTickets::PrintDialog::MAX_COPIES %>
         </p>
         <% if @printers.size > 1 %>
           <p>
@@ -34,7 +34,7 @@
       </div>
       <div class="qbo-ticket-errors" hidden></div>
       <p class="buttons">
-        <%= button_tag l(:button_qbo_tickets_print), type: 'submit', class: 'qbo-ticket-submit' %>
+        <%= button_tag print_label, type: 'submit', class: 'qbo-ticket-submit' %>
         <%= link_to_function l(:button_cancel), 'hideModal(this);' %>
       </p>
     </form>

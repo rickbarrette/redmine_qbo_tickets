@@ -3,13 +3,17 @@
  *
  * Copyright (c) 2026 rick barrette
  *
- * Print key ticket dialog (redmine_qbo_tickets): draws an appointment's key ticket the size the receipt printer
- * prints it (576 dots across 72mm), in black and white as it will print, shows it, sends the picture to the
- * printer's queue, and follows the print job until it's printed.
+ * Print dialogs (redmine_qbo_tickets): draws an appointment's ticket the size the receipt printer prints it
+ * (576 dots across 72mm), in black and white as it will print, shows it, sends the picture to the printer's
+ * queue, and follows the print job until it's printed.
  *
- * The ticket, top to bottom: the customer's name and when they're due (big, to read above the key folder's
+ * The key ticket, top to bottom: the customer's name and when they're due (big, to read above the key folder's
  * edge), the appointment's details, the job, the appointment's notes, the work order's custom fields to fill in at intake
  * (Yes/No boxes, choices, or lines to write on), lines for intake notes, a QR code, and when it was printed.
+ *
+ * The appointment reminder (kind 'reminder'), for the customer: the shop's logo and details, when they're due
+ * (big), the appointment's details, its notes (when the settings print them), a message, and a QR code (their
+ * calendar, or the shop's website).
  */
 var QboTickets = (function($) {
   'use strict';
@@ -184,6 +188,144 @@ var QboTickets = (function($) {
     return y - 10;
   }
 
+  // A QR code of text at left, with its caption beside it; returns the y below it
+  function drawQr(ctx, text, caption, left, top, right) {
+    var qr = qrcode(0, 'M');
+    qr.addData(text);
+    qr.make();
+    var count = qr.getModuleCount();
+    var cell = Math.max(3, Math.floor(200 / count));
+    var size = cell * count;
+    for (var row = 0; row < count; row += 1) {
+      for (var col = 0; col < count; col += 1) {
+        if (qr.isDark(row, col)) { ctx.fillRect(left + 8 + col * cell, top + 8 + row * cell, cell, cell); }
+      }
+    }
+    var captionX = left + 8 + size + 20;
+    ctx.font = font(700, 26);
+    var lines = wrap(ctx, caption, right - captionX);
+    var y = top + Math.max(8, Math.round((size + 16 - lines.length * 32) / 2));
+    lines.forEach(function(line) { ctx.fillText(line, captionX, y + 21); y += 32; });
+    return top + size + 16;
+  }
+
+  // [label, value] lines, the label bold and the value wrapped beside it; returns the y below them
+  function drawDetails(ctx, details, left, top, width) {
+    var y = top;
+    details.forEach(function(pair) {
+      ctx.font = font(700, 24);
+      var label = pair[0] + ': ';
+      var labelWidth = ctx.measureText(label).width;
+      ctx.fillText(label, left, y + 19);
+      ctx.font = font(400, 26);
+      var lines = wrap(ctx, pair[1], width - labelWidth);
+      lines.forEach(function(line, i) {
+        ctx.fillText(line, left + labelWidth, y + 21);
+        y += i < lines.length - 1 ? 30 : 34;
+      });
+    });
+    return y;
+  }
+
+  // The appointment reminder on a tall canvas; returns the height used
+  function drawReminder(ctx, data) {
+    var x = MARGIN, right = WIDTH - MARGIN, width = right - x, y = MARGIN;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, WIDTH, MAX_HEIGHT);
+    ctx.fillStyle = '#000';
+    ctx.strokeStyle = '#000';
+    ctx.textBaseline = 'alphabetic';
+
+    // Lines centered across the paper, each fitted (down to min) or wrapped
+    function centered(str, weight, max, min, gap) {
+      if (!str) { return; }
+      var size = fitSize(ctx, str, weight, max, min, width);
+      var lines = ctx.measureText(str).width > width ? wrap(ctx, str, width) : [str];
+      lines.forEach(function(line) {
+        ctx.fillText(line, x + (width - ctx.measureText(line).width) / 2, y + Math.round(size * 0.8));
+        y += Math.round(size * 1.15);
+      });
+      y += gap || 0;
+    }
+    function rule(thickness, gap) {
+      y += gap;
+      ctx.fillRect(x, y, width, thickness);
+      y += thickness + gap;
+    }
+    function box(left, top, size, checked) {
+      ctx.lineWidth = 3;
+      ctx.strokeRect(left + 1.5, top + 1.5, size - 3, size - 3);
+      if (checked) {
+        ctx.beginPath();
+        ctx.moveTo(left + 6, top + 6); ctx.lineTo(left + size - 6, top + size - 6);
+        ctx.moveTo(left + size - 6, top + 6); ctx.lineTo(left + 6, top + size - 6);
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+    }
+
+    // The shop: logo, name and details
+    var logo = data.logoImage;
+    if (logo && logo.complete && logo.naturalWidth) {
+      var logoWidth = Math.min(width, logo.naturalWidth);
+      var logoHeight = Math.round(logo.naturalHeight * logoWidth / logo.naturalWidth);
+      ctx.drawImage(logo, x + Math.round((width - logoWidth) / 2), y, logoWidth, logoHeight);
+      y += logoHeight + 12;
+    }
+    var shop = data.shop || {};
+    centered(shop.name, 700, 40, 26, 4);
+    (shop.lines || []).forEach(function(line) { centered(line, 400, 24, 20); });
+
+    // The heading, white on black
+    y += 10;
+    ctx.fillRect(x, y, width, 42);
+    ctx.fillStyle = '#fff';
+    var headingSize = fitSize(ctx, data.labels.heading, 700, 28, 18, width - 20);
+    ctx.fillText(data.labels.heading, x + (width - ctx.measureText(data.labels.heading).width) / 2,
+                 y + 21 + Math.round(headingSize * 0.35));
+    ctx.fillStyle = '#000';
+    y += 42 + 16;
+
+    // When, big
+    var due = data.due || {};
+    centered(due.day, 700, 56, 30);
+    centered(due.date, 700, 40, 26, 2);
+    centered(due.time, 700, 72, 36, 4);
+
+    // The appointment's details
+    if (data.details.length) {
+      rule(3, 6);
+      y = drawDetails(ctx, data.details, x, y, width);
+    }
+
+    if (data.notes && data.notes.length) {
+      rule(3, 10);
+      ctx.font = font(700, 26);
+      ctx.fillText(data.labels.notes, x, y + 21);
+      y += 36;
+      y = drawBlocks(ctx, data.notes, x, y, width, box);
+    }
+
+    if (data.message) {
+      rule(1, 10);
+      ctx.font = font(400, 24);
+      data.message.split(/\n/).forEach(function(paragraph) {
+        if (!paragraph.trim()) { y += 14; return; }
+        wrap(ctx, paragraph, width).forEach(function(line) {
+          ctx.fillText(line, x + (width - ctx.measureText(line).width) / 2, y + 19);
+          y += 29;
+        });
+      });
+    }
+
+    if (data.qr && data.qr.text && window.qrcode) {
+      rule(3, 10);
+      y = drawQr(ctx, data.qr.text, data.qr.caption, x, y, right);
+    }
+
+    return Math.min(MAX_HEIGHT, Math.ceil(y + MARGIN + 10));
+  }
+
   // Draws the ticket on a tall canvas; returns the height used
   function drawTicket(ctx, data) {
     var x = MARGIN, right = WIDTH - MARGIN, width = right - x, y = MARGIN;
@@ -234,18 +376,7 @@ var QboTickets = (function($) {
 
     // The appointment's details
     rule(3, 6);
-    data.details.forEach(function(pair) {
-      ctx.font = font(700, 24);
-      var label = pair[0] + ': ';
-      var labelWidth = ctx.measureText(label).width;
-      text(label, 700, 24);
-      ctx.font = font(400, 26);
-      var lines = wrap(ctx, pair[1], width - labelWidth);
-      lines.forEach(function(line, i) {
-        text(line, 400, 26, x + labelWidth);
-        y += i < lines.length - 1 ? 30 : 34;
-      });
-    });
+    y = drawDetails(ctx, data.details, x, y, width);
 
     if (data.job) {
       rule(1, 6);
@@ -327,23 +458,7 @@ var QboTickets = (function($) {
     // QR code, with what it does beside it
     if (data.qr && data.qr.url && window.qrcode) {
       rule(3, 10);
-      var qr = qrcode(0, 'M');
-      qr.addData(data.qr.url);
-      qr.make();
-      var count = qr.getModuleCount();
-      var cell = Math.max(3, Math.floor(200 / count));
-      var size = cell * count;
-      for (var row = 0; row < count; row += 1) {
-        for (var col = 0; col < count; col += 1) {
-          if (qr.isDark(row, col)) { ctx.fillRect(x + 8 + col * cell, y + 8 + row * cell, cell, cell); }
-        }
-      }
-      var captionX = x + 8 + size + 20, top = y;
-      ctx.font = font(700, 26);
-      var caption = wrap(ctx, data.qr.caption, right - captionX);
-      y = top + Math.max(8, Math.round((size + 16 - caption.length * 32) / 2));
-      caption.forEach(function(line) { text(line, 700, 26, captionX); y += 32; });
-      y = top + size + 16;
+      y = drawQr(ctx, data.qr.url, data.qr.caption, x, y, right);
     }
 
     // When it was printed, small at the bottom
@@ -375,7 +490,7 @@ var QboTickets = (function($) {
     var scratch = document.createElement('canvas');
     scratch.width = WIDTH;
     scratch.height = MAX_HEIGHT;
-    var height = drawTicket(scratch.getContext('2d'), data);
+    var height = (data.kind === 'reminder' ? drawReminder : drawTicket)(scratch.getContext('2d'), data);
     canvas.width = WIDTH;
     canvas.height = height;
     var ctx = canvas.getContext('2d');
@@ -395,6 +510,19 @@ var QboTickets = (function($) {
     ticket = data;
     stopFollowing();
     redraw();
+    // The reminder's logo: drawn once it has loaded, and printing waits for it
+    var $submit = dialog().find('.qbo-ticket-submit');
+    if (data.logo) {
+      $submit.prop('disabled', true);
+      var image = new Image();
+      image.onload = image.onerror = function() {
+        if (ticket !== data) { return; }
+        data.logoImage = image;
+        redraw();
+        $submit.prop('disabled', false);
+      };
+      image.src = data.logo;
+    }
     // Draw again once the ticket's fonts have loaded (the first drawing may use fallback fonts)
     if (document.fonts && document.fonts.load) {
       Promise.all([document.fonts.load(font(400, 26), 'A'), document.fonts.load(font(700, 26), 'A')])

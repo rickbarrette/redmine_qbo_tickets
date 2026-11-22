@@ -12,5 +12,7 @@ RedmineApp::Application.routes.draw do
 
   # Print key ticket dialog (show: a ticket's print job)
   resources :key_tickets, only: [:new, :create, :show]
+  # Print reminder dialog: an appointment reminder for the customer
+  resources :reminder_tickets, only: [:new, :create, :show]
 
 end

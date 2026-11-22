@@ -11,7 +11,7 @@
 require File.expand_path('../../../test/test_helper', __dir__)
 
 module QboTicketsTestHelper
-  PERMISSIONS = %i[print_key_tickets view_customer_appointments].freeze
+  PERMISSIONS = %i[print_key_tickets print_reminder_tickets view_customer_appointments].freeze
 
   def self.included(base)
     base.fixtures :projects, :users, :email_addresses, :members, :member_roles, :roles, :issues, :trackers,

@@ -1,3 +1,3 @@
-$('#ajax-modal').html('<%= escape_javascript(render partial: 'key_tickets/dialog') %>');
+$('#ajax-modal').html('<%= escape_javascript(render partial: 'tickets/dialog', locals: { create_url: key_tickets_path, print_label: l(:button_qbo_tickets_print), preview_label: l(:label_qbo_tickets_preview) }) %>');
 showModal('ajax-modal', '420px', '<%= escape_javascript(l(:button_qbo_tickets_print)) %>');
 QboTickets.initDialog(<%= raw @ticket.as_json.to_json %>);

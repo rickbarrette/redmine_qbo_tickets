@@ -113,6 +113,42 @@ class KeyTicketsTest < Redmine::IntegrationTest
     assert_response :not_found
   end
 
+  def test_the_appointment_page_has_print_reminder_with_its_permission
+    log_user('jsmith', 'jsmith')
+    get "/customer_appointments/#{@appointment.id}"
+    assert_select 'a.qbo-ticket-reminder-link', 0
+
+    Role.find(1).remove_permission!(:print_key_tickets)
+    allow(:print_reminder_tickets)
+    get "/customer_appointments/#{@appointment.id}"
+    assert_select 'a.qbo-ticket-print-link', 0
+    assert_select "a.qbo-ticket-reminder-link[href=?]", "/reminder_tickets/new?appointment_id=#{@appointment.id}"
+    assert_match(/qbo_tickets[^"]*\.js/, response.body)
+  end
+
+  def test_the_reminder_dialog_and_printing
+    allow(:print_reminder_tickets)
+    log_user('jsmith', 'jsmith')
+    get '/reminder_tickets/new', params: { appointment_id: @appointment.id }, xhr: true
+    assert_response :success
+    assert_includes response.body, '"kind":"reminder"'
+    assert_includes response.body, 'Print reminder'
+
+    post '/reminder_tickets', params: { appointment_id: @appointment.id, image: Base64.strict_encode64(png) }, xhr: true
+    assert_response :success
+    job = LabelJob.last
+    assert_equal "Reminder: Jane Q Smith (appointment ##{@appointment.id})", job.title
+    assert_equal "/reminder_tickets/#{job.id}", response.parsed_body['url']
+    get "/reminder_tickets/#{job.id}", headers: { 'Accept' => 'application/json' }
+    assert_equal 'queued', response.parsed_body['status']
+  end
+
+  def test_the_reminder_needs_its_permission
+    log_user('jsmith', 'jsmith')
+    get '/reminder_tickets/new', params: { appointment_id: @appointment.id }, xhr: true
+    assert_response :forbidden
+  end
+
   def test_settings_page
     IssueCustomField.create!(name: 'Check Engine Light', field_format: 'bool', is_for_all: true, tracker_ids: Tracker.ids)
     log_user('admin', 'admin')
@@ -126,5 +162,26 @@ class KeyTicketsTest < Redmine::IntegrationTest
          params: { settings: { custom_field_ids: ['', field.id.to_s], note_lines: '3', uppercase: '1' } }
     assert_equal [field.id], RedmineQboTickets::Settings.custom_field_ids
     assert_equal 3, RedmineQboTickets::Settings.note_lines
+  end
+
+  def test_reminder_settings
+    log_user('admin', 'admin')
+    get '/settings/plugin/redmine_qbo_tickets'
+    assert_select 'input[type=file]#qbo_tickets_logo_file'
+    assert_match(/qbo_tickets_settings[^"]*\.js/, response.body)
+
+    logo = "data:image/png;base64,#{Base64.strict_encode64(png(width: 400, height: 120))}"
+    post '/settings/plugin/redmine_qbo_tickets',
+         params: { settings: { logo: logo, shop_name: 'Example Offroad', shop_address: "123 Main St\r\nAnytown",
+                               shop_phone: '401-555-0199', shop_website: 'example.com', reminder_message: 'See you soon',
+                               reminder_qr: 'website', reminder_notes: '1' } }
+    assert_equal logo, RedmineQboTickets::Settings.logo
+    assert_equal ['123 Main St', 'Anytown'], RedmineQboTickets::Settings.shop_address_lines
+    assert_equal 'website', RedmineQboTickets::Settings.reminder_qr
+    assert RedmineQboTickets::Settings.reminder_notes?
+
+    get '/settings/plugin/redmine_qbo_tickets'
+    assert_select 'input#settings_logo[value=?]', logo
+    assert_select 'input#settings_shop_name[value=?]', 'Example Offroad'
   end
 end
