@@ -1,0 +1,8 @@
+<%# The print dialog's script and styles, in the page's head, once (the print links render it) %>
+<% unless @qbo_tickets_assets %>
+  <% @qbo_tickets_assets = true %>
+  <% content_for :header_tags do %>
+    <%= stylesheet_link_tag 'qbo_tickets', plugin: 'redmine_qbo_tickets' %>
+    <%= javascript_include_tag 'qrcode', 'qbo_tickets', plugin: 'redmine_qbo_tickets' %>
+  <% end %>
+<% end %>

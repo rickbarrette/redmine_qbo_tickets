@@ -1,4 +1,5 @@
 <%# Print reminder, in an appointment's top-right actions; opens the print dialog %>
+<%= render partial: 'ticket_hooks/assets' %>
 <%= link_to new_reminder_ticket_path(appointment_id: appointment.id), remote: true, class: 'qbo-ticket-reminder-link',
             title: l(:button_qbo_tickets_print_reminder) do %>
   <i class="fa-regular fa-calendar-check"></i> <%= l(:button_qbo_tickets_print_reminder) %>

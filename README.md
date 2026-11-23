@@ -1,6 +1,6 @@
 # Redmine QBO Tickets
 
-Prints tickets for appointments ([redmine_qbo_calendar](https://github.com/rickbarrette/redmine_qbo_calendar)) on a Star receipt printer: **key tickets** for the shop and **appointment reminders** for customers.
+Prints tickets for appointments ([redmine_qbo_calendar](https://github.com/rickbarrette/redmine_qbo_calendar)) on a Star receipt printer: **key tickets** for the shop and **appointment reminders** for customers. It also prints **vehicle intake forms** for walk-ins, from a customer's page.
 
 ## Key tickets
 
@@ -24,6 +24,18 @@ Prints a **key ticket** for an appointment ([redmine_qbo_calendar](https://githu
 **Print key ticket** is in the appointment page's top-right actions. The dialog shows the ticket exactly as it will print (black and white, 72mm wide), then follows it until it's printed, like the Print label dialog.
 
 <br clear="right">
+
+## Vehicle intake forms
+
+For a vehicle dropped off without an appointment: **Print intake form** on a customer's page prints a ticket like the key ticket, for the key folder:
+
+* the customer's last name in big letters, under it **Vehicle intake**;
+* the customer, their phone and other plugins' lines. With [redmine_qbo_vehicles](https://github.com/rickbarrette/redmine_qbo_vehicles), tick a vehicle in the customer's list first and the form shows its **Vehicle** and **VIN**. The vehicle's own page has **Print intake form** too;
+* the same **intake** fields and **intake notes** lines as the key ticket, all blank (there's no work order yet);
+* a QR code: with redmine_qbo_vehicles it opens the vehicle, or, with none ticked, adds one for the customer. Without it, it opens the customer;
+* when it was printed.
+
+It needs the **Print key tickets and intake forms** and **View customers** permissions.
 
 ## Appointment reminders
 
@@ -66,16 +78,18 @@ Restart Redmine, then:
 
 1. **Administration » Label printers » New label printer**: type *Receipt printer*. Run the print agent with the Compose file shown (set `PRINTER` to the printer's address).
 2. **Administration » Plugins » Redmine QBO Tickets plugin » Configure**: tick the work order custom fields to print, and how many lines for notes. For reminders: your logo, shop details, message and QR code.
-3. **Administration » Roles and permissions**: give the roles that check customers in **Print key tickets**, and those that book appointments **Print appointment reminders** (they also need **View customer appointments**).
+3. **Administration » Roles and permissions**: give the roles that check customers in **Print key tickets and intake forms** (intake forms also need **View customers**), and those that book appointments **Print appointment reminders** (they also need **View customer appointments**).
 
 ## Hooks
 
-Other plugins add to the tickets with these hooks (context: `appointment`, and `base_url`, Redmine's address for links):
+Other plugins add to the tickets with these hooks (context: `appointment`, and `base_url`, Redmine's address for links; on intake forms `appointment` is nil, and the context has `customer` and `params`, the link's other params as strings, e.g. the ticked `vehicle_id`):
 
 Hook | Return
 ---|---
-`:qbo_tickets_details` | An array of `[label, value]` lines, shown under the customer, e.g. `[['Vehicle', '2019 Jeep Wrangler']]`. Called for both tickets; the context's `kind` is `'key'` or `'reminder'`, so lines only the shop should see can be left off the customer's reminder
-`:qbo_tickets_qr` | `{ url:, caption: }` for the key ticket's QR code (the first listener's). Without one, it opens the appointment. Not used on reminders
+`:qbo_tickets_details` | An array of `[label, value]` lines, shown under the customer, e.g. `[['Vehicle', '2019 Jeep Wrangler']]`. Called for every ticket; the context's `kind` is `'key'`, `'reminder'` or `'intake'`, so lines only the shop should see can be left off the customer's reminder
+`:qbo_tickets_qr` | `{ url:, caption: }` for the QR code of a key ticket or intake form (the first listener's; check `kind`). Without one, it opens the appointment (the customer, on intake forms). Not used on reminders
+
+Other plugins can put **Print intake form** on their own pages: when `RedmineQboTickets.intake_available?`, render `ticket_hooks/intake_link` with `customer:` and `params:` (e.g. `{ vehicle_id: 12 }`, given to the hooks). redmine_qbo_vehicles does this on a vehicle's page.
 
 ## License
 

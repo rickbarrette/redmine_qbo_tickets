@@ -14,5 +14,7 @@ RedmineApp::Application.routes.draw do
   resources :key_tickets, only: [:new, :create, :show]
   # Print reminder dialog: an appointment reminder for the customer
   resources :reminder_tickets, only: [:new, :create, :show]
+  # Print intake form dialog: a customer's vehicle intake form, without an appointment
+  resources :intake_tickets, only: [:new, :create, :show]
 
 end

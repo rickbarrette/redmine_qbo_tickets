@@ -1,7 +1,7 @@
 # English strings go here for Rails i18n
 en:
   # Permission (Roles and permissions)
-  permission_print_key_tickets: "Print key tickets"
+  permission_print_key_tickets: "Print key tickets and intake forms"
   permission_print_reminder_tickets: "Print appointment reminders"
 
   label_qbo_tickets_preview: "Key ticket preview"
@@ -31,6 +31,9 @@ en:
   label_qbo_tickets_reminder_qr_calendar: "Add the appointment to their calendar"
   label_qbo_tickets_reminder_qr_website: "Open the shop's website"
   label_qbo_tickets_reminder_qr_none: "None"
+  label_qbo_tickets_intake_preview: "Intake form preview"
+  label_qbo_tickets_intake_heading: "Vehicle intake"
+  label_qbo_tickets_intake_job_title: "Intake form: %{name}"
   label_qbo_tickets_logo_preview: "The logo as it prints"
 
   field_qbo_tickets_copies: "Copies"
@@ -52,9 +55,11 @@ en:
   button_qbo_tickets_print: "Print key ticket"
   button_qbo_tickets_print_again: "Print again"
   button_qbo_tickets_print_reminder: "Print reminder"
+  button_qbo_tickets_print_intake: "Print intake form"
   button_qbo_tickets_logo_remove: "Remove the logo"
 
   text_qbo_tickets_qr_appointment: "Scan to open the appointment"
+  text_qbo_tickets_qr_customer: "Scan to open the customer"
   text_qbo_tickets_qr_calendar: "Scan to add it to your calendar"
   text_qbo_tickets_qr_website: "Scan to visit our website"
   text_qbo_tickets_printing: "Printing…"

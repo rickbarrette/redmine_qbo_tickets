@@ -28,6 +28,12 @@ module RedmineQboTickets
     allowed && LabelPrinter.active.receipts.exists?
   end
 
+  # Whether the current user may print intake forms: Print key tickets, viewing customers, and a receipt printer.
+  # Other plugins check it before rendering ticket_hooks/intake_link (e.g. redmine_qbo_vehicles' vehicle page).
+  def self.intake_available?
+    printing_available?(:print_key_tickets) && User.current.allowed_to?(:view_customers, nil, global: true)
+  end
+
   # The listeners' answers to a hook, flattened, without blanks
   def self.hook_list(hook, context = {})
     Redmine::Hook.call_hook(hook, context).flatten(1).compact_blank

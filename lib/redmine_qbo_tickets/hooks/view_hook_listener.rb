@@ -10,18 +10,9 @@
 
 module RedmineQboTickets
   module Hooks
-    # "Print key ticket" and "Print reminder" in an appointment's top-right actions, and the dialog's script and
-    # styles
+    # "Print key ticket" and "Print reminder" in an appointment's top-right actions, and "Print intake form" in
+    # a customer's (the links add the dialog's script and styles to the page, ticket_hooks/assets)
     class ViewHookListener < Redmine::Hook::ViewListener
-      def view_layouts_base_html_head(context = {})
-        controller = context[:controller]
-        return '' unless controller&.controller_name == 'customer_appointments' && controller.action_name == 'show'
-        return '' unless RedmineQboTickets.printing_available?
-
-        stylesheet_link_tag('qbo_tickets', plugin: 'redmine_qbo_tickets') +
-          javascript_include_tag('qrcode', 'qbo_tickets', plugin: 'redmine_qbo_tickets')
-      end
-
       # redmine_qbo_calendar's :view_customer_appointments_show_contextual
       def view_customer_appointments_show_contextual(context = {})
         appointment = context[:appointment]
@@ -31,6 +22,15 @@ module RedmineQboTickets
           .select { |permission, _| RedmineQboTickets.printing_available?(permission) }
           .map { |_, partial| context[:hook_caller].render(partial: partial, locals: { appointment: appointment }) }
           .join.html_safe
+      end
+
+      # redmine_qbo's :view_customers_show_contextual: a vehicle intake form for the customer (with what's
+      # ticked on the page, e.g. a vehicle)
+      def view_customers_show_contextual(context = {})
+        customer = context[:customer]
+        return '' if customer.nil? || !RedmineQboTickets.intake_available?
+
+        context[:hook_caller].render(partial: 'ticket_hooks/intake_link', locals: { customer: customer })
       end
     end
   end

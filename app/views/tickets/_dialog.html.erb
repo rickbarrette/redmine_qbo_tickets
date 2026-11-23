@@ -1,8 +1,8 @@
-<%# The print dialog (key tickets and appointment reminders): the ticket as it will print (drawn by
+<%# The print dialog (key tickets, appointment reminders and intake forms): the ticket as it will print (drawn by
     assets/javascripts/qbo_tickets.js), copies and printer. Locals: create_url, print_label, preview_label %>
 <div id="qbo-ticket-dialog"
      data-create-url="<%= create_url %>"
-     data-appointment-id="<%= @ticket.appointment.id %>"
+     data-params="<%= @ticket.dialog_params.to_json %>"
      data-text-printing="<%= l(:text_qbo_tickets_printing) %>"
      data-text-waiting="<%= l(:text_qbo_tickets_waiting) %>"
      data-text-offline="<%= l(:text_qbo_tickets_offline) %>"

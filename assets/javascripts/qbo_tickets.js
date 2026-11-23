@@ -11,6 +11,9 @@
  * edge), the appointment's details, the job, the appointment's notes, the work order's custom fields to fill in at intake
  * (Yes/No boxes, choices, or lines to write on), lines for intake notes, a QR code, and when it was printed.
  *
+ * The intake form (kind 'intake') is drawn the same way, from a customer instead of an appointment: no time,
+ * job or appointment notes.
+ *
  * The appointment reminder (kind 'reminder'), for the customer: the shop's logo and details, when they're due
  * (big), the appointment's details, its notes (when the settings print them), a message, and a QR code (their
  * calendar, or the shop's website).
@@ -556,12 +559,12 @@ var QboTickets = (function($) {
       method: 'POST',
       dataType: 'json',
       headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
-      data: {
-        appointment_id: $dialog.data('appointment-id'),
+      // The ticket's own params (appointment_id, or customer_id and the link's others), then the print's
+      data: $.extend({}, $dialog.data('params'), {
         image: preview().toDataURL('image/png'),
         copies: $dialog.find('#qbo_ticket_copies').val(),
         printer_id: $dialog.find('#qbo_ticket_printer').val()
-      }
+      })
     }).done(function(job) {
       follow(job);
     }).fail(function(xhr) {

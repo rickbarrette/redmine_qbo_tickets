@@ -23,8 +23,8 @@ module RedmineQboTickets
   #   :qbo_tickets_qr       { url:, caption: } for the QR code (the first listener's); without one, the QR code
   #                         opens the appointment
   class Ticket
-    # List fields with more choices than this get a line to write on instead
-    MAX_CHOICES = 6
+    include IntakeFields
+
     NOTES_LENGTH = 1000
 
     attr_reader :appointment
@@ -33,6 +33,22 @@ module RedmineQboTickets
     def self.find(id)
       appointment = CustomerAppointment.visible.find_by(id: id)
       appointment && !appointment.call_out? ? new(appointment) : nil
+    end
+
+    # The ticket the print dialog's params name (appointment_id)
+    def self.from_params(params)
+      find(params[:appointment_id])
+    end
+
+    # The print job's source (redmine_qbo_labels' LabelSource), and what the dialog sends back with the picture
+    SOURCE_TYPE = 'appointment'
+
+    def source_id
+      appointment.id
+    end
+
+    def dialog_params
+      { appointment_id: appointment.id }
     end
 
     def initialize(appointment)
@@ -101,14 +117,6 @@ module RedmineQboTickets
       RichText.blocks(notes_text)
     end
 
-    # The chosen custom fields, each as { name:, kind:, value:, choices: }:
-    #   yesno    Yes and No boxes (yes/no fields), value '1', '0' or ''
-    #   choices  a box for each choice (lists of up to MAX_CHOICES), value the chosen ones
-    #   line     a line to write on (anything else), value the field's value
-    def fields
-      Settings.custom_fields.map { |field| describe_field(field) }
-    end
-
     def qr
       found = RedmineQboTickets.hook_first(:qbo_tickets_qr, appointment: appointment, base_url: self.class.base_url)
       if found && found[:url].present?
@@ -128,14 +136,19 @@ module RedmineQboTickets
       {
         name: name, when: when_text, number: number, details: details, job: job, notes: notes,
         fields: fields, note_lines: Settings.note_lines, qr: qr,
-        labels: {
-          yes: I18n.t(:general_text_Yes), no: I18n.t(:general_text_No), notes: I18n.t(:label_qbo_tickets_notes),
-          job: I18n.t(:label_qbo_tickets_job), intake: I18n.t(:label_qbo_tickets_intake),
-          appointment_notes: I18n.t(:label_qbo_tickets_appointment_notes),
-          intake_notes: I18n.t(:label_qbo_tickets_intake_notes),
-          # %{time} is filled in by the browser when the ticket is printed
-          printed: I18n.t(:label_qbo_tickets_printed, time: '%{time}')
-        }
+        labels: self.class.labels
+      }
+    end
+
+    # The headings and words a ticket drawn like a key ticket prints
+    def self.labels
+      {
+        yes: I18n.t(:general_text_Yes), no: I18n.t(:general_text_No), notes: I18n.t(:label_qbo_tickets_notes),
+        job: I18n.t(:label_qbo_tickets_job), intake: I18n.t(:label_qbo_tickets_intake),
+        appointment_notes: I18n.t(:label_qbo_tickets_appointment_notes),
+        intake_notes: I18n.t(:label_qbo_tickets_intake_notes),
+        # %{time} is filled in by the browser when the ticket is printed
+        printed: I18n.t(:label_qbo_tickets_printed, time: '%{time}')
       }
     end
 
@@ -161,29 +174,6 @@ module RedmineQboTickets
       RedmineQboTickets.hook_list(:qbo_tickets_details, appointment: appointment, base_url: self.class.base_url,
                                                         kind: 'key')
                        .select { |line| line.is_a?(Array) && line.size == 2 }
-    end
-
-    def describe_field(field)
-      raw = issue ? issue.custom_field_value(field) : nil
-      case field.field_format
-      when 'bool'
-        { name: field.name, kind: 'yesno', value: raw.to_s, choices: [] }
-      when 'list', 'enumeration'
-        choices = field.field_format == 'list' ? field.possible_values : field.enumerations.active.map(&:name)
-        chosen = Array(field.cast_value(raw)).map(&:to_s)
-        if choices.size.between?(1, MAX_CHOICES)
-          { name: field.name, kind: 'choices', value: chosen, choices: choices }
-        else
-          { name: field.name, kind: 'line', value: chosen.join(', '), choices: [] }
-        end
-      else
-        { name: field.name, kind: 'line', value: line_value(field, raw), choices: [] }
-      end
-    end
-
-    def line_value(field, raw)
-      values = Array(field.cast_value(raw)).compact
-      values.map { |value| value.is_a?(Date) ? I18n.l(value) : value.to_s }.join(', ')
     end
   end
 end

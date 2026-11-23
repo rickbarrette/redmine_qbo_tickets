@@ -9,14 +9,15 @@
 #THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 module RedmineQboTickets
-  # What the print dialogs' controllers share (key tickets and appointment reminders): the dialog (new), opened
-  # from an appointment; the browser draws the ticket, shows it, and sends the picture to a receipt printer's
+  # What the print dialogs' controllers share (key tickets, appointment reminders and intake forms): the dialog
+  # (new), opened from an appointment or a customer; the browser draws the ticket, shows it, and sends the picture to a receipt printer's
   # queue (create, redmine_qbo_labels' LabelJob.queue_image); the dialog then follows the print job until it's
   # printed (show). The dialog asks for JSON with an Accept header, not a .json URL: Redmine treats .json as
   # the REST API, without the session.
   #
-  # A controller including it says what it prints with #ticket_class (Ticket or Reminder: find(id), #title,
-  # #appointment, #as_json).
+  # A controller including it says what it prints with #ticket_class (Ticket, Reminder or IntakeForm:
+  # .from_params(params), SOURCE_TYPE, #source_id, #dialog_params (sent back with the picture), #title,
+  # #as_json).
   module PrintDialog
     extend ActiveSupport::Concern
 
@@ -38,7 +39,7 @@ module RedmineQboTickets
 
       job = LabelJob.queue_image(printer: printer, png: decode_png(params[:image]), title: @ticket.title,
                                  copies: params[:copies].to_i.clamp(1, MAX_COPIES), user: User.current,
-                                 source_type: 'appointment', source_id: @ticket.appointment.id)
+                                 source_type: ticket_class::SOURCE_TYPE, source_id: @ticket.source_id)
       if job.persisted?
         render json: { url: url_for(action: :show, id: job.id, only_path: true), printer: printer.name,
                        printer_online: printer.online? }
@@ -49,7 +50,7 @@ module RedmineQboTickets
 
     # A ticket's print job, for the dialog: only the user's own (or any, for admins)
     def show
-      job = LabelJob.without_image.find_by(id: params[:id], source_type: 'appointment')
+      job = LabelJob.without_image.find_by(id: params[:id], source_type: ticket_class::SOURCE_TYPE)
       return render_404 unless job && (job.user_id == User.current.id || User.current.admin?)
 
       unless job.finished?
@@ -63,7 +64,7 @@ module RedmineQboTickets
     private
 
     def find_ticket
-      @ticket = ticket_class.find(params[:appointment_id])
+      @ticket = ticket_class.from_params(params)
       render_404 unless @ticket
     end
 

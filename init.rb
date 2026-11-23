@@ -25,8 +25,9 @@ Redmine::Plugin.register :redmine_qbo_tickets do
 
   settings default: RedmineQboTickets::Settings::DEFAULTS.dup, partial: 'settings/qbo_tickets'
 
-  # The Print key ticket dialog, sending the ticket and following its print job
-  permission :print_key_tickets, { key_tickets: [:new, :create, :show] }, global: true
+  # The Print key ticket and Print intake form dialogs, sending the ticket and following its print job
+  permission :print_key_tickets, { key_tickets: [:new, :create, :show], intake_tickets: [:new, :create, :show] },
+             global: true
   # The Print reminder dialog: an appointment reminder for the customer
   permission :print_reminder_tickets, { reminder_tickets: [:new, :create, :show] }, global: true
 end

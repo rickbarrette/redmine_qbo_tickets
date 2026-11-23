@@ -32,6 +32,22 @@ module RedmineQboTickets
       appointment && !appointment.call_out? ? new(appointment) : nil
     end
 
+    # The ticket the print dialog's params name (appointment_id)
+    def self.from_params(params)
+      find(params[:appointment_id])
+    end
+
+    # The print job's source (redmine_qbo_labels' LabelSource), and what the dialog sends back with the picture
+    SOURCE_TYPE = 'appointment'
+
+    def source_id
+      appointment.id
+    end
+
+    def dialog_params
+      { appointment_id: appointment.id }
+    end
+
     def initialize(appointment)
       @appointment = appointment
     end

@@ -1,0 +1,9 @@
+<%# Print intake form: a customer's vehicle intake form; opens the print dialog. Locals: customer, and
+    params (optional), more params for the form, e.g. { vehicle_id: 12 } from redmine_qbo_vehicles' vehicle page.
+    On the customer page, what's ticked (e.g. a vehicle) is added to the link (redmine_qbo's data-ticked-params);
+    elsewhere that does nothing.
+    Check RedmineQboTickets.intake_available? before rendering it. %>
+<%= render partial: 'ticket_hooks/assets' %>
+<%= link_to sprite_icon('key', l(:button_qbo_tickets_print_intake)),
+            new_intake_ticket_path((local_assigns[:params] || {}).merge(customer_id: customer.id)), remote: true,
+            class: 'icon icon-key qbo-ticket-intake-link', data: { ticked_params: '%s' } %>
