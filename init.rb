@@ -4,7 +4,7 @@ Redmine::Plugin.register :redmine_qbo_tickets do
   name 'Redmine QBO Tickets plugin'
   author 'Rick Barrette'
   description 'Prints tickets for appointments on a receipt printer: key tickets (the customer, the appointment, the work order\'s custom fields to fill in at intake, room for notes, and a QR code) and appointment reminders for customers (the shop\'s logo and details, when they\'re due, and a QR code for their calendar)'
-  version '2026.11.2'
+  version '2026.11.3'
   url 'https://github.com/rickbarrette/redmine_qbo_tickets'
   author_url 'https://barrettefabrication.com'
   requires_redmine version_or_higher: '7.0.0'
